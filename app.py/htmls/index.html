@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정보과제연구 계획서 | 공공데이터 API 활용 버스 노선 분석</title>
+    <style>
+        /* Google Fonts Import */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+        /* --- Global Variables & Reset --- */
+        :root {
+            --primary-color: #007aff;
+            --background-color: #f9f9f9;
+            --content-bg-color: #ffffff;
+            --text-color: #1d1d1f;
+            --text-light-color: #6e6e73;
+            --border-color: #e5e5e5;
+            --sidebar-width: 280px;
+            --transition-speed: 0.5s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.8;
+        }
+
+        /* --- Main Layout: Sidebar + Content --- */
+        .report-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 3rem 2rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 4rem 3rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* --- Sidebar Navigation (TOC) --- */
+        #table-of-contents h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        #table-of-contents ul {
+            list-style: none;
+        }
+
+        #table-of-contents li {
+            margin: 0.5rem 0;
+        }
+
+        #table-of-contents a {
+            text-decoration: none;
+            color: var(--text-light-color);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            display: block;
+            padding: 0.2rem 0;
+        }
+
+        #table-of-contents a:hover {
+            color: var(--text-color);
+        }
+
+        #table-of-contents a.active {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        #table-of-contents ul ul {
+            margin-left: 1.2rem;
+            padding-left: 0.8rem;
+            border-left: 1px solid var(--border-color);
+        }
+
+
+        /* --- General Content Styling --- */
+        .content-section {
+            padding-bottom: 4rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity var(--transition-speed) ease-out, transform var(--transition-speed) ease-out;
+        }
+
+        .content-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .content-section:last-child {
+            border-bottom: none;
+        }
+
+        article h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        article h3 {
+            font-size: 1.5rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+            font-weight: 500;
+        }
+
+        article h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        article p {
+            margin-bottom: 1rem;
+        }
+
+        /* --- Header --- */
+        .report-header {
+            margin-bottom: 4rem;
+        }
+
+        .report-header h1 {
+            font-size: 2.8rem;
+        }
+        .report-header .author {
+            color: var(--text-light-color);
+            margin-top: 0.5rem;
+        }
+        .topic-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            line-height: 1.5;
+        }
+
+
+        /* --- Specific Content Elements --- */
+        .custom-list {
+            list-style-type: '✔ ';
+            padding-left: 1.5rem;
+        }
+        .custom-list li {
+            padding-left: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card {
+            background-color: #f5f5f7;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .keyword-tags span {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .procedure-list {
+            list-style-type: decimal;
+            padding-left: 1.5rem;
+        }
+        .procedure-list li {
+            padding-left: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        blockquote {
+            margin: 2rem 0;
+            padding: 1rem 1.5rem;
+            border-left: 4px solid var(--primary-color);
+            background-color: #f5f5f7;
+            border-radius: 0 8px 8px 0;
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .schedule-table th, .schedule-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .schedule-table th {
+            background-color: #f5f5f7;
+        }
+
+        .reference-list {
+            list-style: none;
+        }
+        .reference-list li {
+            margin-bottom: 1rem;
+        }
+        .reference-list a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        .reference-list a:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 1024px) {
+            .report-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 1.5rem 2rem;
+                overflow-y: hidden;
+            }
+            
+            #table-of-contents {
+                display: flex;
+                align-items: center;
+                overflow-x: auto;
+            }
+            #table-of-contents h3 {
+                margin: 0;
+                margin-right: 2rem;
+                white-space: nowrap;
+            }
+            #table-of-contents > ul {
+                display: flex;
+                gap: 1.5rem;
+            }
+             #table-of-contents > ul > li ul {
+                display: none; /* Hide sub-menu on smaller screens for simplicity */
+             }
+             
+            .main-content {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="report-container">
+        <!-- 왼쪽 고정 네비게이션 (목차) -->
+        <aside class="sidebar">
+            <nav id="table-of-contents">
+                <h3>목차</h3>
+                <ul>
+                    <li><a href="#topic">1. 연구 주제</a></li>
+                    <li><a href="#intro">2. 서론</a>
+                        <ul>
+                            <li><a href="#intro-motivation">가. 연구 동기</a></li>
+                            <li><a href="#intro-purpose">나. 연구 목적</a></li>
+                            <li><a href="#intro-question">다. 연구 문제</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#background">3. 이론적 배경</a>
+                        <ul>
+                            <li><a href="#background-tech">가. 관련 기술</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#methods">4. 연구 내용 및 방법</a>
+                        <ul>
+                             <li><a href="#methods-scope">가. 연구 대상 및 범위</a></li>
+                             <li><a href="#methods-procedure">나. 연구 절차</a></li>
+                             <li><a href="#methods-schedule">다. 활동 일정</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#effects">5. 기대 효과</a></li>
+                    <li><a href="#references">6. 참고 문헌</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 오른쪽 메인 콘텐츠 -->
+        <main class="main-content">
+            <!-- 헤더 -->
+            <header class="report-header">
+                <h1>정보과제연구 계획서</h1>
+                <p class="author">연구자: 김강현</p>
+            </header>
+            
+            <!-- 1. 연구 주제 -->
+            <section id="topic" class="content-section">
+                <article>
+                    <h2>1. 연구 주제</h2>
+                    <p class="topic-title">공공데이터 API를 활용한 버스 노선의 배차 간격 효율성 분석 및 최적화 방안 연구</p>
+                </article>
+            </section>
+
+            <!-- 2. 서론 -->
+            <section id="intro" class="content-section">
+                <article>
+                    <h2>2. 서론</h2>
+                    <div id="intro-motivation">
+                        <h3>가. 연구 동기 및 필요성</h3>
+                        <p>저는 매일 아침 버스를 이용해 등교하는 평범한 고등학생입니다. 하지만 버스를 기다리는 시간은 결코 평범하지 않을 때가 많습니다. 어떤 날은 버스가 금방 오지만, 다른 날은 스마트폰 앱의 도착 예정 시간이 계속 늘어나며 20분 넘게 기다려야 하는 일이 잦았습니다. 특히 학생들과 직장인들이 몰리는 출퇴근 시간에는 이러한 불편함이 더욱 심각하게 느껴졌습니다.</p>
+                        <p>이러한 불편함이 단순히 저만의 느낌일지, 아니면 데이터로 증명할 수 있는 구조적인 문제일지 궁금해졌습니다. 만약 데이터로 버스 배차 간격의 비효율성을 증명할 수 있다면, 더 나아가 시민들의 발이 되어주는 대중교통 시스템을 개선하는 데 작은 아이디어를 보탤 수 있겠다는 생각에 이 연구를 시작하게 되었습니다.</p>
+                    </div>
+                    <div id="intro-purpose">
+                        <h3>나. 연구 목적</h3>
+                        <p>본 연구는 공공데이터를 활용하여 우리 동네 N번 버스의 시간대별 실제 운행 데이터를 수집하고, 배차 간격의 비효율성을 객관적인 데이터로 분석하여 데이터에 기반한 최적의 배차 간격 개선 방안을 제안하는 것을 목적으로 합니다.</p>
+                    </div>
+                    <div id="intro-question">
+                         <h3>다. 연구 문제</h3>
+                        <ul class="custom-list">
+                            <li>버스의 시간대별(출근, 평시, 퇴근) 평균 실제 배차 간격은 어떠한가?</li>
+                            <li>버스의 배차 간격은 어느 시간대에 가장 불규칙하게 나타나는가?</li>
+                            <li>분석된 데이터를 바탕으로, N번 버스의 운행 효율성을 높이기 위한 최적의 배차 간격 조정 방안은 무엇인가?</li>
+                        </ul>
+                    </div>
+                </article>
+            </section>
+
+            <!-- 3. 이론적 배경 -->
+            <section id="background" class="content-section">
+                <article>
+                    <h2>3. 이론적 배경</h2>
+                    <div id="background-tech">
+                        <h3>가. 관련 이론/기술 및 선행 연구 조사</h3>
+                        <div class="info-card">
+                            <h4>공공데이터 API</h4>
+                            <p>공공데이터포털에서 제공하는 '버스도착정보조회 서비스' API를 활용합니다. API는 프로그램 간의 소통 창구로, 이를 통해 실시간 버스 운행 정보를 프로그래밍적으로 수집할 수 있습니다.</p>
+                        </div>
+                        <div class="info-card">
+                            <h4>데이터 분석 및 시각화</h4>
+                            <p>Python 언어와 Pandas 라이브러리로 데이터를 정제하고, Matplotlib와 Seaborn 라이브러리를 이용해 분석 결과를 막대그래프, 박스플롯 등으로 시각화하여 문제점을 직관적으로 파악합니다.</p>
+                        </div>
+                        <div class="info-card">
+                             <h4>기초 통계 분석</h4>
+                            <p>시간대별 배차 간격의 특징을 파악하기 위해 **평균(Mean)**과 **표준편차(Standard Deviation)**를 활용합니다. 평균은 배차 간격의 일반적인 수준을, 표준편차는 배차 간격이 얼마나 불규칙한지를 보여주는 척도입니다.</p>
+                        </div>
+                        <h4>선행 연구 조사 키워드</h4>
+                        <p>이 주제와 관련하여 깊이 있는 정보를 얻기 위해 아래와 같은 키워드로 논문이나 관련 보고서를 검색해 볼 수 있습니다.</p>
+                        <div class="keyword-tags">
+                            <span>#대중교통_데이터_분석</span>
+                            <span>#버스_배차간격_최적화</span>
+                            <span>#공공데이터_API_활용</span>
+                            <span>#빅데이터_도시_교통</span>
+                        </div>
+                    </div>
+                </article>
+            </section>
+            
+            <!-- 4. 연구 내용 및 방법 -->
+            <section id="methods" class="content-section">
+                <article>
+                    <h2>4. 연구 내용 및 방법</h2>
+                    <div id="methods-scope">
+                        <h3>가. 연구 대상 및 범위</h3>
+                        <ul class="custom-list">
+                            <li><strong>대상:</strong> 특정 버스 노선 전체</li>
+                            <li><strong>범위:</strong> 2025년 10월 6일부터 10월 8일까지 (3일간) 수집된 실시간 버스 도착 정보 데이터</li>
+                        </ul>
+                    </div>
+                    <div id="methods-procedure">
+                        <h3>나. 연구 절차 및 방법</h3>
+                        <ol class="procedure-list">
+                            <li><strong>데이터 수집:</strong> Python을 이용해 5분마다 공공데이터 API를 호출하여 버스 도착 정보를 CSV 파일로 저장합니다.</li>
+                            <li><strong>데이터 전처리/분석:</strong> 원본 데이터에서 '실제 배차 간격'을 계산하고, 시간대별(출근/평시/퇴근)로 그룹화하여 통계 분석을 수행합니다.</li>
+                            <li><strong>데이터 시각화/해석:</strong> 분석 결과를 막대그래프, 박스플롯 등으로 시각화하여 문제점을 명확히 해석합니다.</li>
+                            <li><strong>결론 도출 및 제언:</strong> 분석 결과를 종합하여 데이터 기반의 배차 간격 개선 방안을 최종적으로 제안합니다.</li>
+                        </ol>
+                    </div>
+                     <div id="methods-schedule">
+                        <h3>다. 예상 주요 활동 일정</h3>
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>주차</th>
+                                    <th>기간</th>
+                                    <th>주요 활동 내용</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1주차</td>
+                                    <td>10/6 ~ 10/12</td>
+                                    <td>API 활용 신청, 데이터 수집 스크립트 완성 및 수집 시작</td>
+                                </tr>
+                                <tr>
+                                    <td>2주차</td>
+                                    <td>10/13 ~ 10/19</td>
+                                    <td>수집 데이터 전처리 및 '실제 배차 간격' 계산</td>
+                                </tr>
+                                <tr>
+                                    <td>3주차</td>
+                                    <td>10/20 ~ 10/26</td>
+                                    <td>그룹별 통계 분석, 데이터 시각화 및 결과 해석</td>
+                                </tr>
+                                <tr>
+                                    <td>4주차</td>
+                                    <td>10/27 ~ 11/2</td>
+                                    <td>연구 보고서 최종 작성 및 발표용 웹페이지 제작</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+            
+            <!-- 5. 기대 효과 -->
+            <section id="effects" class="content-section">
+                <article>
+                    <h2>5. 기대 효과 및 활용 방안</h2>
+                    <p>본 연구의 최종 분석 보고서를 지역 버스 운수회사와 시/구청 교통 관련 부서에 정책 자료로 제안할 수 있습니다. 🚌</p>
+                    <p>이 보고서는 주관적인 민원이나 제안을 넘어, 객관적인 데이터를 바탕으로 특정 시간대의 배차 증설이나 탄력적 노선 운영의 필요성을 주장하는 과학적인 근거로 활용될 수 있습니다.</p>
+                    <blockquote>
+                        이를 통해 만성적인 문제였던 출퇴근 시간의 긴 대기 시간을 줄여 학생과 직장인들의 대중교통 만족도를 실질적으로 향상시키고, 나아가 대중교통 이용 활성화를 유도하여 교통 혼잡 완화 및 환경 보호에도 기여할 수 있을 것으로 기대됩니다. ✨
+                    </blockquote>
+                </article>
+            </section>
+            
+            <!-- 6. 참고 문헌 -->
+            <section id="references" class="content-section">
+                <article>
+                    <h2>6. 참고 문헌</h2>
+                    <ul class="reference-list">
+                        <li><a href="https://www.data.go.kr" target="_blank"><strong>공공데이터포털.</strong> (2025). 경기도_버스도착정보조회 서비스.</a></li>
+                        <li><a href="https://gbis.go.kr" target="_blank"><strong>경기도 버스정보시스템.</strong> (2025). 노선 및 정류소 정보.</a></li>
+                        <li><a href="https://pandas.pydata.org/docs/" target="_blank"><strong>The Pandas Development Team.</strong> (2025). pandas documentation.</a></li>
+                        <li><a href="https://matplotlib.org" target="_blank"><strong>The Matplotlib development team.</strong> (2025). Matplotlib: Visualization with Python.</a></li>
+                    </ul>
+                </article>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // --- Scroll Spy Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM elements
+            const sections = document.querySelectorAll('.content-section');
+            const navLinks = document.querySelectorAll('#table-of-contents a');
+
+            // Create an Intersection Observer for activating nav links on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Get the ID of the intersecting section
+                        const id = entry.target.getAttribute('id');
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+                        // Add 'active' class to the corresponding nav link
+                        const activeLink = document.querySelector(`#table-of-contents a[href="#${id}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, {
+                // Options for the observer
+                rootMargin: '-20% 0px -70% 0px' // Trigger when the section is in the upper part of the viewport
+            });
+
+            // Observe each main section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+
+
+        // --- Content Fade-in on Scroll Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create another Intersection Observer for the fade-in animation
+            const animationObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // If the element is intersecting (visible), add the 'visible' class
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        // Unobserve after the animation has been triggered once
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                // Options for the observer
+                threshold: 0.1 // trigger when 10% of the element is visible
+            });
+            
+            // Observe each content section for the animation
+            const sectionsToAnimate = document.querySelectorAll('.content-section');
+            sectionsToAnimate.forEach(section => {
+                animationObserver.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
+
